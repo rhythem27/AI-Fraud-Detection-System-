@@ -1,6 +1,18 @@
 version: '3.8'
 
 services:
+  db:
+    image: postgres:15
+    restart: always
+    environment:
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=fraud_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
   backend:
     build:
       context: ./backend
@@ -11,7 +23,9 @@ services:
       - ./backend:/app
       - ./backend/uploads:/app/uploads
     environment:
-      - ENV=dev
+      - DATABASE_URL=postgresql://user:password@db:5432/fraud_db
+    depends_on:
+      - db
 
   frontend:
     build:
@@ -23,3 +37,6 @@ services:
       - ./frontend:/app
     depends_on:
       - backend
+
+volumes:
+  postgres_data:
