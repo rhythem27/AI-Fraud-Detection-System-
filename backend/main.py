@@ -58,6 +58,52 @@ class FraudResult(BaseModel):
     ocr_data: List[dict]
     heatmap_base64: str
 
+@app.post("/analyze", response_model=FraudResult)
+async def analyze_document_simple(
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db)
+):
+    """
+    Simplified analyze endpoint for local frontend testing without mandatory API keys.
+    """
+    # 1. Save File
+    file_id = str(uuid.uuid4())
+    extension = os.path.splitext(file.filename)[1].lower()
+    
+    if extension not in ['.jpg', '.jpeg', '.png']:
+        raise HTTPException(status_code=400, detail="Only JPG and PNG images are supported.")
+
+    saved_path = os.path.join(UPLOAD_DIR, f"{file_id}{extension}")
+    with open(saved_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+    
+    try:
+        # 2. OCR and Layout Analysis
+        ocr_results = ocr_service.extract_text(saved_path)
+        layout_score = layout_analyzer.analyze_spatial_consistency(ocr_results)
+        
+        # 3. ELA Fraud Detection
+        ela_image, ela_score = calculate_ela(saved_path)
+        heatmap_base64 = image_to_base64(ela_image)
+        
+        # 4. Final Scoring
+        final_score, classification = calculate_final_score(ela_score, layout_score)
+        
+        return FraudResult(
+            filename=file.filename,
+            final_score=final_score,
+            classification=classification,
+            ela_score=round(float(ela_score), 4),
+            layout_score=round(float(layout_score), 4),
+            is_fraud=classification != "Authentic",
+            ocr_data=ocr_results,
+            heatmap_base64=heatmap_base64
+        )
+    except Exception as e:
+        import traceback
+        print(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.post("/upload", response_model=FraudResult)
 async def upload_document(
     file: UploadFile = File(...),
