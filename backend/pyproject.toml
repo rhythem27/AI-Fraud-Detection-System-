@@ -1,0 +1,24 @@
+[tool.poetry]
+name = "backend"
+version = "0.1.0"
+description = "AI Document Fraud Detection Backend"
+authors = ["AI Assistant <assistant@example.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+fastapi = "^0.100.0"
+uvicorn = "^0.22.0"
+python-multipart = "^0.0.6"
+easyocr = "^1.7.1"
+torch = ">=2.0.0"
+torchvision = ">=0.15.0"
+transformers = "^4.30.0"
+opencv-python-headless = "^4.8.0"
+numpy = "^1.24.0"
+pillow = "^10.0.0"
+matplotlib = "^3.7.0"
+python-dotenv = "^1.0.0"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

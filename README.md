@@ -20,22 +20,23 @@ An end-to-end system to detect tampering in documents (Salary Slips, IDs, Utilit
    ```bash
    docker-compose up --build
    ```
-3. Access the UI at `http://localhost:8501`.
-4. Access the API documentation at `http://localhost:8000/docs`.
+   (Note: The Docker containers now use **Poetry** to manage dependencies.)
 
 ## Manual Setup
+To set up the project locally, it is recommended to have [Poetry](https://python-poetry.org/docs/#installation) installed.
+
 ### Backend
 ```bash
 cd backend
-pip install -r requirements.txt
-python main.py
+poetry install
+poetry run uvicorn main:app --reload
 ```
 
 ### Frontend
 ```bash
 cd frontend
-pip install -r requirements.txt
-streamlit run app.py
+poetry install
+poetry run streamlit run app.py
 ```
 
 ## How ELA Works
