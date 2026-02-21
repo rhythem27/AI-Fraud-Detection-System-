@@ -20,3 +20,7 @@ scikit-image
 pdf2image
 PyPDF2
 grad-cam
+langchain
+langchain-community
+chromadb
+sentence-transformers

@@ -20,6 +20,7 @@ from services.entity_extractor import entity_extractor, ExtractedData
 from services.kyc_validator import kyc_validator, ValidationResult
 from services.dl_detector import dl_detector, dl_image_to_base64
 from services.pdf_processor import pdf_processor, PDFMetadata
+from services.rag_service import rag_service, ChatResponse
 
 # Create tables on startup
 Base.metadata.create_all(bind=engine)
@@ -70,6 +71,9 @@ class FraudResult(BaseModel):
 class BatchFraudResult(BaseModel):
     results: List[FraudResult]
     kyc_validation: ValidationResult
+
+class CopilotRequest(BaseModel):
+    question: str
 
 @app.post("/analyze", response_model=FraudResult)
 async def analyze_document_simple(
@@ -306,6 +310,17 @@ async def analyze_batch(
         results=results,
         kyc_validation=val_result
     )
+
+@app.post("/copilot-chat", response_model=ChatResponse)
+async def copilot_chat(request: CopilotRequest):
+    """
+    RAG-based Analyst Copilot Chat.
+    """
+    try:
+        response = rag_service.query(request.question)
+        return response
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/")
 async def root():

@@ -84,13 +84,56 @@ with st.sidebar:
     
     st.divider()
     st.info("Supported: JPG, JPEG, PNG, PDF")
-    st.caption("AI Fraud Detection System v1.2 (Deep Learning)")
+    st.caption("AI Fraud Detection System v1.3 (RAG Copilot)")
+
+    st.divider()
+    with st.expander("🤖 Analyst Copilot (RAG)", expanded=False):
+        st.markdown("Ask questions about **KYC Policies** and **Fraud Protocols**.")
+        
+        # Chat history state
+        if "messages" not in st.session_state:
+            st.session_state.messages = []
+
+        # Display chat history
+        for message in st.session_state.messages:
+            with st.chat_message(message["role"]):
+                st.markdown(message["content"])
+
+        # Chat input
+        if prompt := st.chat_input("Ask a policy question..."):
+            # Add user message to chat history
+            st.session_state.messages.append({"role": "user", "content": prompt})
+            with st.chat_message("user"):
+                st.markdown(prompt)
+
+            # Get response from AI
+            with st.chat_message("assistant"):
+                with st.spinner("Consulting Rulebook..."):
+                    res = call_chat_api(prompt)
+                    if "error" in res:
+                        full_res = f"Backend Error: {res['error']}"
+                    else:
+                        full_res = res['answer']
+                        if res.get('sources'):
+                            full_res += f"\n\n**Sources:** {', '.join(res['sources'])}"
+                    
+                    st.markdown(full_res)
+                    st.session_state.messages.append({"role": "assistant", "content": full_res})
 
 # --- API Integration Helper ---
 def call_api(endpoint, files):
     url = f"{backend_base}{endpoint}"
     try:
         response = requests.post(url, files=files, timeout=60)
+        response.raise_for_status()
+        return response.json()
+    except Exception as e:
+        return {"error": str(e)}
+
+def call_chat_api(question):
+    url = f"{backend_base}/copilot-chat"
+    try:
+        response = requests.post(url, json={"question": question}, timeout=30)
         response.raise_for_status()
         return response.json()
     except Exception as e:
